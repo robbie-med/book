@@ -1,31 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #FFF9C4;
-    color: #444;
-    text-align: center;
-    padding: 20px;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background-color: #f5f6f7;
+    color: #333;
+    line-height: 1.7;
+    word-break: keep-all; /* Prevents breaking words in the middle - important for Korean */
+    overflow-wrap: break-word;
+    letter-spacing: -0.02em; /* Slightly tighter for Korean readability */
+    margin: 0;
+    padding: 0;
 }
+
 .container {
     max-width: 800px;
-    margin: auto;
+    margin: 30px auto;
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
 }
+
+/* Korean-inspired decorative element */
+.container::before {
+    content: "";
+    display: block;
+    height: 6px;
+    background: linear-gradient(90deg, #8dc7dc, #c8a8d0, #f0cdaa);
+    border-radius: 8px 8px 0 0;
+    margin: -30px -30px 30px -30px;
+}
+
 input, button, textarea {
-    margin: 5px;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
+    margin: 8px 0;
+    padding: 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     width: 100%;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
+
 button {
-    background-color: #FFD54F;
+    background-color: #5884a8; /* Traditional Korean blue */
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: #416887;
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    background-color: #d1d1d1;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Section styling */
+.section {
+    transition: all 0.4s ease;
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 25px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+.section h3 {
+    position: relative;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    background-color: #f8fafc;
+    font-weight: 500;
+    color: #4a4a4a;
+    border-left: 4px solid #5884a8;
+    padding-left: 15px;
     cursor: pointer;
 }
-button:disabled {
-    background-color: #CCC;
-    cursor: not-allowed;
+
+.section h3::after {
+    content: "▼";
+    position: absolute;
+    right: 15px;
+    transition: transform 0.3s ease;
+    color: #5884a8;
 }
-.hidden { display: none; }
+
+.section.collapsed h3::after {
+    content: "▶";
+}
+
+.section.collapsed > *:not(h3) {
+    display: none;
+}
+
+.section.collapsed h3 {
+    margin-bottom: 0;
+    background-color: #f8f9fa;
+    border-left: 4px solid #d9d9d9;
+    color: #6e6e6e;
+}
+
+.section.collapsed h3:hover {
+    border-left: 4px solid #5884a8;
+    color: #4a4a4a;
+}
+
+/* Optimized paragraph styles for Korean */
+p {
+    margin-bottom: 1.2em;
+    line-height: 1.8;
+    text-align: justify;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    font-size: 1.05rem;
+}
+
+/* Quiz styling with Korean-friendly design */
+.quiz-question {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: left;
+    border-left: 3px solid #d7e3f1;
+}
+
+.quiz-options {
+    padding-left: 20px;
+    margin-top: 10px;
+}
+
+.quiz-options p {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background-color: #f3f6fa;
+    font-size: 1rem;
+}
+
+.next-btn {
+    margin-top: 20px;
+    max-width: 200px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+textarea.question {
+    border: 1px solid #d6e0f0;
+    background-color: #fcfcfc;
+    min-height: 100px;
+    resize: vertical;
+    font-size: 1rem;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+textarea.question:focus {
+    border-color: #5884a8;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(88, 132, 168, 0.2);
+}
+
+/* Login styling */
+#loginContainer {
+    text-align: center;
+    max-width: 400px;
+    padding: 40px;
+}
+
+#loginContainer h2 {
+    margin-bottom: 30px;
+    color: #4a4a4a;
+    font-weight: 500;
+}
+
+/* Headings optimized for Korean */
+h2, h3, h4 {
+    font-weight: 500; /* Medium weight looks better for Korean */
+    color: #333;
+    margin: 1.5em 0 0.8em 0;
+    line-height: 1.4;
+}
+
+h2 {
+    font-size: 1.8rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4 {
+    font-size: 1.2rem;
+    color: #5a5a5a;
+}
+
+/* Utility classes */
+.hidden { 
+    display: none; 
+}
+
+strong {
+    font-weight: 500; /* Medium weight is better for Korean emphasis */
+    color: #303030;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 20px;
+        margin: 15px auto;
+    }
+    
+    .container::before {
+        margin: -20px -20px 20px -20px;
+    }
+    
+    p, .quiz-options p, textarea.question {
+        font-size: 1rem;
+    }
+}
+
+/* Enhanced readability with proper vertical rhythm */
+* + h2, * + h3, * + h4 {
+    margin-top: 2em;
+}
+
+/* Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
