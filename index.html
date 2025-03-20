@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Markdown Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFF9C4;
+            color: #444;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #FFD54F;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #CCC;
+            cursor: not-allowed;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Enter username">
+        <button onclick="login()">Login</button>
+    </div>
+    
+    <div class="container hidden" id="appContainer">
+        <h2 id="title">Loading...</h2>
+        <div id="content"></div>
+    </div>
+    
+    <script>
+        let progress = 0;
+        let content = "";
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            if(localStorage.getItem("user")) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("appContainer").classList.remove("hidden");
+                loadMarkdown();
+            }
+        });
+
+        function login() {
+            let user = document.getElementById("username").value;
+            if(user) {
+                localStorage.setItem("user", user);
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("appContainer").classList.remove("hidden");
+                loadMarkdown();
+            }
+        }
+
+        function loadMarkdown() {
+            fetch("content.md")
+                .then(response => response.text())
+                .then(text => {
+                    content = text;
+                    renderMarkdown();
+                });
+        }
+
+        function renderMarkdown() {
+            let sections = content.split("##");
+            let output = "";
+            let unlocked = progress;
+            
+            sections.forEach((section, index) => {
+                let lines = section.trim().split("\n");
+                let title = lines[0].startsWith("#") ? lines.shift().replace("#", "").trim() : "";
+                let text = lines.join("<br>");
+                let questions = text.match(/%Q%(.*?)%Q%/g);
+                
+                text = text.replace(/%Q%(.*?)%Q%/g, "<br><input type='text' class='question' data-index='"+index+"' placeholder='Answer required'><br>");
+                
+                output += `<div class='section ${index > unlocked ? "hidden" : ""}'>`;
+                if(title) output += `<h3>${title}</h3>`;
+                output += `<p>${text}</p>`;
+                if (questions) output += `<button class='next-btn' data-index='${index}' onclick='validateAnswers(${index})'>Next</button>`;
+                output += `</div>`;
+            });
+            
+            document.getElementById("content").innerHTML = output;
+        }
+
+        function validateAnswers(index) {
+            let inputs = document.querySelectorAll(`.section:nth-child(${index+1}) .question`);
+            let allAnswered = true;
+            inputs.forEach(input => {
+                if(input.value.trim() === "") allAnswered = false;
+            });
+            
+            if(allAnswered) {
+                progress++;
+                localStorage.setItem("progress", progress);
+                document.querySelectorAll(".section")[progress].classList.remove("hidden");
+                document.querySelector(`.section:nth-child(${index+1}) .next-btn`).disabled = true;
+            } else {
+                alert("Please answer all questions before proceeding.");
+            }
+        }
+    </script>
+</body>
+</html>
