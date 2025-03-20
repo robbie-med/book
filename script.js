@@ -2,12 +2,40 @@ let progress = parseInt(localStorage.getItem("progress")) || 0;
 let content = "";
 let answers = JSON.parse(localStorage.getItem("answers")) || {};
 
+// Add toggle functionality to section titles
+function addToggleEventListeners() {
+    // For all completed sections (those before the current progress)
+    for (let i = 0; i < progress; i++) {
+        let section = document.querySelectorAll(".section")[i];
+        if (section) {
+            section.classList.add("collapsed");
+            let sectionTitle = section.querySelector("h3");
+            if (sectionTitle && !sectionTitle.hasAttribute("data-toggle-added")) {
+                sectionTitle.setAttribute("data-toggle-added", "true");
+                sectionTitle.addEventListener("click", function() {
+                    section.classList.toggle("collapsed");
+                });
+            }
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     if(localStorage.getItem("user")) {
         document.getElementById("loginContainer").classList.add("hidden");
         document.getElementById("appContainer").classList.remove("hidden");
         loadMarkdown();
     }
+    
+    // Add event listener for the whole document to handle section toggling
+    document.addEventListener("click", function(e) {
+        if (e.target.tagName === "H3" || e.target.parentElement.tagName === "H3") {
+            let section = e.target.closest(".section");
+            if (section) {
+                section.classList.toggle("collapsed");
+            }
+        }
+    });
 });
 
 function login() {
@@ -41,6 +69,11 @@ function renderMarkdown() {
     let sections = content.split(/(?=# )/);
     let output = "";
     let unlocked = progress;
+    
+    // Add event listener for toggling collapsed sections after rendering
+    document.addEventListener("DOMContentLoaded", function() {
+        addToggleEventListeners();
+    });
     
     sections.forEach((section, index) => {
         let lines = section.trim().split("\n");
@@ -99,9 +132,31 @@ function renderMarkdown() {
     
     document.getElementById("content").innerHTML = output;
     document.getElementById("title").textContent = "Bilingual Markdown Reader";
+    
+    // Add collapse functionality to previously completed sections
+    addToggleEventListeners();
 }
 
 // Helper function to process quizzes
+// Add toggle functionality to section titles
+function addToggleEventListeners() {
+    // For all completed sections (those before the current progress)
+    for (let i = 0; i < progress; i++) {
+        let section = document.querySelectorAll(".section")[i];
+        if (section) {
+            section.classList.add("collapsed");
+            let sectionTitle = section.querySelector("h3");
+            if (sectionTitle && !sectionTitle.hasAttribute("data-toggle-added")) {
+                sectionTitle.setAttribute("data-toggle-added", "true");
+                sectionTitle.style.cursor = "pointer";
+                sectionTitle.addEventListener("click", function() {
+                    section.classList.toggle("collapsed");
+                });
+            }
+        }
+    }
+}
+
 function processQuiz(quizText, sectionIndex, subSectionIndex = null) {
     let quizHTML = "";
     let prefix = subSectionIndex !== null ? `${sectionIndex}-${subSectionIndex}` : `${sectionIndex}`;
@@ -211,9 +266,32 @@ function saveAnswers(index) {
         answers[`${index}-${qIndex}`] = input.value.trim();
     });
     localStorage.setItem("answers", JSON.stringify(answers));
+    
+    // Add 'collapsed' class to the current section
+    let currentSection = document.querySelectorAll(".section")[index];
+    currentSection.classList.add("collapsed");
+    
+    // Add a toggle functionality to the section title
+    if (!currentSection.querySelector("h3").hasAttribute("data-toggle-added")) {
+        let sectionTitle = currentSection.querySelector("h3");
+        sectionTitle.setAttribute("data-toggle-added", "true");
+        sectionTitle.style.cursor = "pointer";
+        sectionTitle.addEventListener("click", function() {
+            currentSection.classList.toggle("collapsed");
+        });
+    }
+    
+    // Increment progress and show next section
     progress++;
     localStorage.setItem("progress", progress);
     let nextSection = document.querySelectorAll(".section")[progress];
     if (nextSection) nextSection.classList.remove("hidden");
+    
+    // Disable the next button
     document.querySelector(`.section:nth-child(${index+1}) .next-btn`).disabled = true;
+    
+    // Scroll to the newly visible section
+    if (nextSection) {
+        nextSection.scrollIntoView({ behavior: "smooth" });
+    }
 }
