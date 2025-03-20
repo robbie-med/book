@@ -38,7 +38,7 @@ function loadMarkdown() {
 
 function renderMarkdown() {
     // Split the content into sections using headings (# or ##)
-    let sections = content.split(/(?=# |## )/);
+    let sections = content.split(/(?=# )/);
     let output = "";
     let unlocked = progress;
     
@@ -46,59 +46,50 @@ function renderMarkdown() {
         let lines = section.trim().split("\n");
         let title = lines[0].startsWith("#") ? lines.shift().replace(/#/g, "").trim() : "";
         
-        // Find the quiz section marked by %Q%
+        // Join the content back
         let sectionText = lines.join("\n");
-        let quizStartIndex = sectionText.indexOf("%Q%");
         
-        let regularText = quizStartIndex > -1 ? sectionText.substring(0, quizStartIndex) : sectionText;
-        let quizText = quizStartIndex > -1 ? sectionText.substring(quizStartIndex + 3) : "";
+        // Find all subsections if any (## headings)
+        let subsections = sectionText.split(/(?=## )/).filter(s => s.trim());
         
         // Create the section HTML
         let sectionHTML = `<div class='section ${index > unlocked ? "hidden" : ""}'>`;
         if(title) sectionHTML += `<h3>${title}</h3>`;
-        sectionHTML += `<p>${regularText.replace(/\n/g, "<br>")}</p>`;
         
-        // If quiz section exists, parse and render it
-        if (quizText.trim()) {
-            // Parse the quiz questions
-            let questionPattern = /(\d+\.\s.*?)(?=\d+\.\s|$)/gs;
-            let questionMatches = [...quizText.matchAll(questionPattern)];
-            
-            if (questionMatches.length === 0) {
-                // Try another approach if no matches found
-                questionMatches = quizText.split(/(?=\d+\.\s)/).filter(q => q.trim());
-            }
-            
-            questionMatches.forEach((qMatch, qIndex) => {
-                let questionBlock = qMatch instanceof Array ? qMatch[0] : qMatch;
-                let lines = questionBlock.trim().split("\n");
-                let questionText = lines[0].trim();
+        // If there are subsections, process each one
+        if (subsections.length > 0) {
+            subsections.forEach((subsection, subIndex) => {
+                let subLines = subsection.trim().split("\n");
+                let subTitle = subLines[0].startsWith("##") ? subLines.shift().replace(/#/g, "").trim() : "";
                 
-                sectionHTML += `<div class="quiz-question">`;
-                sectionHTML += `<p><strong>${questionText}</strong></p>`;
+                if(subTitle) sectionHTML += `<h4>${subTitle}</h4>`;
                 
-                // Process options
-                let optionsHTML = "";
-                for (let i = 1; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (line && !line.includes("**정답:**")) {
-                        optionsHTML += `<p>${line}</p>`;
-                    }
+                // Process subsection content
+                let subSectionText = subLines.join("\n");
+                let quizStartIndex = subSectionText.indexOf("%Q%");
+                
+                let regularText = quizStartIndex > -1 ? subSectionText.substring(0, quizStartIndex) : subSectionText;
+                let quizText = quizStartIndex > -1 ? subSectionText.substring(quizStartIndex + 3) : "";
+                
+                sectionHTML += `<p>${regularText.replace(/\n/g, "<br>")}</p>`;
+                
+                // Process quiz if it exists
+                if (quizText.trim()) {
+                    sectionHTML += processQuiz(quizText, index, subIndex);
                 }
-                
-                if (optionsHTML) {
-                    sectionHTML += `<div class="quiz-options">${optionsHTML}</div>`;
-                }
-                
-                // Render answer input
-                let savedAnswer = answers[`${index}-${qIndex}`] || "";
-                sectionHTML += `<textarea class='question' data-index='${index}' data-qindex='${qIndex}' placeholder='답변을 입력하세요'>${savedAnswer}</textarea><br>`;
-                sectionHTML += `</div>`;
             });
+        } else {
+            // No subsections, process the main section
+            let quizStartIndex = sectionText.indexOf("%Q%");
             
-            // Add the "Next" button
-            if (questionMatches.length > 0) {
-                sectionHTML += `<button class='next-btn' data-index='${index}' onclick='saveAnswers(${index})'>다음</button>`;
+            let regularText = quizStartIndex > -1 ? sectionText.substring(0, quizStartIndex) : sectionText;
+            let quizText = quizStartIndex > -1 ? sectionText.substring(quizStartIndex + 3) : "";
+            
+            sectionHTML += `<p>${regularText.replace(/\n/g, "<br>")}</p>`;
+            
+            // Process quiz if it exists
+            if (quizText.trim()) {
+                sectionHTML += processQuiz(quizText, index);
             }
         }
         
@@ -108,6 +99,109 @@ function renderMarkdown() {
     
     document.getElementById("content").innerHTML = output;
     document.getElementById("title").textContent = "Bilingual Markdown Reader";
+}
+
+// Helper function to process quizzes
+function processQuiz(quizText, sectionIndex, subSectionIndex = null) {
+    let quizHTML = "";
+    let prefix = subSectionIndex !== null ? `${sectionIndex}-${subSectionIndex}` : `${sectionIndex}`;
+    
+    // Parse the quiz questions
+    let questions = [];
+    let currentQuestion = null;
+    
+    // First, try to extract individual questions
+    quizText.split("\n").forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        
+        // Check if this is a new question
+        let questionMatch = line.match(/^(\d+)\.\s+(.*)/);
+        if (questionMatch) {
+            if (currentQuestion) {
+                questions.push(currentQuestion);
+            }
+            currentQuestion = {
+                number: questionMatch[1],
+                text: questionMatch[2],
+                options: [],
+                answer: null
+            };
+        } 
+        // Check if this is an option
+        else if (line.match(/^[a-z]\)\s+/) && currentQuestion) {
+            currentQuestion.options.push(line);
+        }
+        // Check if this is the answer
+        else if (line.includes("**정답:**") && currentQuestion) {
+            currentQuestion.answer = line.replace("**정답:**", "").trim();
+        }
+    });
+    
+    // Add the last question
+    if (currentQuestion) {
+        questions.push(currentQuestion);
+    }
+    
+    // If no questions were found with the above method, try another approach
+    if (questions.length === 0) {
+        let questionBlocks = quizText.split(/(?=\d+\.\s)/).filter(q => q.trim());
+        
+        questionBlocks.forEach((block, idx) => {
+            let lines = block.trim().split("\n");
+            let questionLine = lines[0];
+            let questionMatch = questionLine.match(/^(\d+)\.\s+(.*)/);
+            
+            if (questionMatch) {
+                let questionObj = {
+                    number: questionMatch[1],
+                    text: questionMatch[2],
+                    options: [],
+                    answer: null
+                };
+                
+                for (let i = 1; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (line.match(/^[a-z]\)\s+/)) {
+                        questionObj.options.push(line);
+                    } else if (line.includes("**정답:**")) {
+                        questionObj.answer = line.replace("**정답:**", "").trim();
+                    }
+                }
+                
+                questions.push(questionObj);
+            }
+        });
+    }
+    
+    // Generate HTML for questions
+    questions.forEach((question, qIndex) => {
+        let questionId = `${prefix}-${qIndex}`;
+        let savedAnswer = answers[questionId] || "";
+        
+        quizHTML += `<div class="quiz-question">`;
+        quizHTML += `<p><strong>${question.number}. ${question.text}</strong></p>`;
+        
+        // Add options
+        if (question.options.length > 0) {
+            quizHTML += `<div class="quiz-options">`;
+            question.options.forEach(option => {
+                quizHTML += `<p>${option}</p>`;
+            });
+            quizHTML += `</div>`;
+        }
+        
+        // Render answer input
+        quizHTML += `<textarea class='question' data-index='${sectionIndex}' data-qindex='${qIndex}' placeholder='답변을 입력하세요'>${savedAnswer}</textarea><br>`;
+        quizHTML += `</div>`;
+    });
+    
+    // Add the "Next" button
+    if (questions.length > 0) {
+        quizHTML += `<button class='next-btn' data-index='${sectionIndex}' onclick='saveAnswers(${sectionIndex})'>다음</button>`;
+    }
+    
+    return quizHTML;
 }
 
 function saveAnswers(index) {
