@@ -2,12 +2,6 @@ let progress = parseInt(localStorage.getItem("progress")) || 0;
 let content = "";
 let answers = JSON.parse(localStorage.getItem("answers")) || {};
 
-// Add toggle functionality to section titles
-function addToggleEventListeners() {
-    // This function is kept for backward compatibility
-    // We now use the onclick attribute directly on the h3 elements
-}
-
 document.addEventListener("DOMContentLoaded", function() {
     if(localStorage.getItem("user")) {
         document.getElementById("loginContainer").classList.add("hidden");
@@ -48,11 +42,6 @@ function renderMarkdown() {
     let output = "";
     let unlocked = progress;
     
-    // Add event listener for toggling collapsed sections after rendering
-    document.addEventListener("DOMContentLoaded", function() {
-        addToggleEventListeners();
-    });
-    
     sections.forEach((section, index) => {
         let lines = section.trim().split("\n");
         let title = lines[0].startsWith("#") ? lines.shift().replace(/#/g, "").trim() : "";
@@ -65,7 +54,7 @@ function renderMarkdown() {
         
         // Create the section HTML
         let sectionHTML = `<div class='section ${index > unlocked ? "hidden" : ""}'>`;
-        if(title) sectionHTML += `<h3>${title}</h3>`;
+        if(title) sectionHTML += `<h3 onclick="toggleSection(this)">${title}</h3>`;
         
         // If there are subsections, process each one
         if (subsections.length > 0) {
@@ -109,36 +98,23 @@ function renderMarkdown() {
     });
     
     document.getElementById("content").innerHTML = output;
-    document.getElementById("title").textContent = "Bilingual Markdown Reader";
+    document.getElementById("title").textContent = "결혼 준비";
     
-    // Add collapse functionality to previously completed sections
-    addToggleEventListeners();
+    // Initialize sections for already completed content
+    if (progress > 0) {
+        for (let i = 0; i < progress; i++) {
+            let section = document.querySelectorAll(".section")[i];
+            if (section) {
+                section.classList.add("collapsed");
+            }
+        }
+    }
 }
 
 // Toggle section collapse/expand
 function toggleSection(element) {
     let section = element.closest('.section');
     section.classList.toggle('collapsed');
-}
-
-// Helper function to process quizzes
-// Add toggle functionality to section titles
-function addToggleEventListeners() {
-    // For all completed sections (those before the current progress)
-    for (let i = 0; i < progress; i++) {
-        let section = document.querySelectorAll(".section")[i];
-        if (section) {
-            section.classList.add("collapsed");
-            let sectionTitle = section.querySelector("h3");
-            if (sectionTitle && !sectionTitle.hasAttribute("data-toggle-added")) {
-                sectionTitle.setAttribute("data-toggle-added", "true");
-                sectionTitle.style.cursor = "pointer";
-                sectionTitle.addEventListener("click", function() {
-                    section.classList.toggle("collapsed");
-                });
-            }
-        }
-    }
 }
 
 function processQuiz(quizText, sectionIndex, subSectionIndex = null) {
@@ -254,16 +230,6 @@ function saveAnswers(index) {
     // Add 'collapsed' class to the current section
     let currentSection = document.querySelectorAll(".section")[index];
     currentSection.classList.add("collapsed");
-    
-    // Add a toggle functionality to the section title
-    if (!currentSection.querySelector("h3").hasAttribute("data-toggle-added")) {
-        let sectionTitle = currentSection.querySelector("h3");
-        sectionTitle.setAttribute("data-toggle-added", "true");
-        sectionTitle.style.cursor = "pointer";
-        sectionTitle.addEventListener("click", function() {
-            currentSection.classList.toggle("collapsed");
-        });
-    }
     
     // Increment progress and show next section
     progress++;
