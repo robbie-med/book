@@ -4,20 +4,8 @@ let answers = JSON.parse(localStorage.getItem("answers")) || {};
 
 // Add toggle functionality to section titles
 function addToggleEventListeners() {
-    // For all completed sections (those before the current progress)
-    for (let i = 0; i < progress; i++) {
-        let section = document.querySelectorAll(".section")[i];
-        if (section) {
-            section.classList.add("collapsed");
-            let sectionTitle = section.querySelector("h3");
-            if (sectionTitle && !sectionTitle.hasAttribute("data-toggle-added")) {
-                sectionTitle.setAttribute("data-toggle-added", "true");
-                sectionTitle.addEventListener("click", function() {
-                    section.classList.toggle("collapsed");
-                });
-            }
-        }
-    }
+    // This function is kept for backward compatibility
+    // We now use the onclick attribute directly on the h3 elements
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -26,16 +14,6 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("appContainer").classList.remove("hidden");
         loadMarkdown();
     }
-    
-    // Add event listener for the whole document to handle section toggling
-    document.addEventListener("click", function(e) {
-        if (e.target.tagName === "H3" || e.target.parentElement.tagName === "H3") {
-            let section = e.target.closest(".section");
-            if (section) {
-                section.classList.toggle("collapsed");
-            }
-        }
-    });
 });
 
 function login() {
@@ -135,6 +113,12 @@ function renderMarkdown() {
     
     // Add collapse functionality to previously completed sections
     addToggleEventListeners();
+}
+
+// Toggle section collapse/expand
+function toggleSection(element) {
+    let section = element.closest('.section');
+    section.classList.toggle('collapsed');
 }
 
 // Helper function to process quizzes
